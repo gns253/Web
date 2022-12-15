@@ -1,7 +1,10 @@
 package com.itwillbs.mvc_board.controller;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.mvc_board.cipher.MyMessageDigest;
 import com.itwillbs.mvc_board.service.MemberService;
@@ -251,6 +255,33 @@ public class MemberController {
 		}
 		
 	}
+	
+	@ResponseBody
+	@PostMapping(value = "MemberMobileLogin.me")
+	public void mobileLogin(@ModelAttribute MemberVO member, HttpServletResponse response) {
+		try {
+			// ------------------ BCryptPasswordEncoder 활용한 로그인 판별 ----------------------
+			// 1. BCryptPasswordEncoder 객체 생성
+			BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+			
+			// 2. member 테이블에서 id 에 해당하는 패스워드 조회 후 리턴값 저장(getPasswd())
+			//    => 파라미터 : 아이디    리턴타입 : String(passwd)
+			String passwd = service.getPasswd(member.getId());
+			
+			response.setCharacterEncoding("UTF-8");
+			PrintWriter out = response.getWriter();
+			
+			// 3. 조회 결과를 활용하여 로그인 성공 여부 판별
+			if(passwd == null || !encoder.matches(member.getPasswd(), passwd)) {
+				out.print("fail");
+			} else {
+				out.print("success");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	
 }
